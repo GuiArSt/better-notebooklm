@@ -1,0 +1,34 @@
+# The dev environment (D-025): project `application-test-devenv`, on the Mac, built NATIVELY for this machine (arm64 on Apple Silicon: no
+# emulation), behind its own Cloudflare tunnel. Layer it on the other two files, from deploy/ (deploy/dev-up.sh does all of this):
+#   docker compose -p application-test-devenv --env-file <env file> -f compose.yaml -f compose.demo.yaml -f compose.dev-stack.yaml up -d
+#
+# It inherits the demo profile: the same hard memory caps with no swap (app 512 + worker 512 + db 512 + cloudflared 64 = 1,600 MB), no
+# published host port, its own networks and volumes (named after the project), its own cloudflared, one worker for both queues.
+# What it adds: `build:` sections (the images are built here, not shipped), and the secrets file, which lives OUTSIDE the repository
+# (DEV_ENV_FILE, by default ~/application-test-dev/.env; dev-up.sh passes it as --env-file and never reads it). Beside it is
+# stack.env, which dev-up.sh generates once for what the stack itself needs (APP_KEY, the database name, user and password,
+# queue and session settings): the owner's file is read after it and wins wherever both name the same variable.
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: app
+    # Two files, the second wins: the stack's own generated values, then the owner's (his keys, his URL, his tunnel token).
+    env_file: !override
+      - ${DEV_STACK_ENV_FILE:?set DEV_STACK_ENV_FILE (deploy/dev-up.sh does)}
+      - ${DEV_ENV_FILE:?set DEV_ENV_FILE (deploy/dev-up.sh does)}
+    environment:
+      # Not "production": the dev test users (php artisan dev:seed-testers) must be possible here.
+      APP_ENV: staging
+
+  worker-default:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: media
+    env_file: !override
+      - ${DEV_STACK_ENV_FILE:?set DEV_STACK_ENV_FILE (deploy/dev-up.sh does)}
+      - ${DEV_ENV_FILE:?set DEV_ENV_FILE (deploy/dev-up.sh does)}
+    environment:
+      APP_ENV: staging

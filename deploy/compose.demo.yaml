@@ -1,0 +1,41 @@
+# The demo on the owner's shared box (D-016). Use as an override, from this folder (deploy/):
+#   docker compose -p application-test -f compose.yaml -f compose.demo.yaml up -d
+#
+# Memory, hard (memswap_limit equals mem_limit, so nothing swaps): app 512 + worker 512 (queues, scheduler and ffmpeg in one)
+# + db 512 + cloudflared 64 = 1,600 MB (1.6 GB) in all. worker-media and scheduler are switched off.
+# Network: the project has two networks of its own (compose.yaml): no `external` network, nothing joins another project's.
+# NO host port is published. The hostname reaches the app through this project's own cloudflared (a NEW tunnel whose token is
+# CLOUDFLARE_TUNNEL_TOKEN in .env; its public hostname points at http://app:80), on the project's own `egress` network.
+services:
+  app:
+    ports: !reset []
+    mem_limit: 512m
+    memswap_limit: 512m
+    environment:
+      PHP_FPM_MAX_CHILDREN: "4"
+
+  # One worker for both queues, with ffmpeg, and the scheduler folded into it.
+  worker-default:
+    image: application-test/media:${IMAGE_TAG:?set IMAGE_TAG}
+    command: ["sh", "-c", "php artisan schedule:work & exec php artisan queue:work --queue=media,default --tries=2 --timeout=600"]
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 1.0
+
+  worker-media:
+    profiles: [off]
+
+  # This project's own tunnel, always on in the demo (in compose.yaml it is behind the `tunnel` profile). It reaches the app
+  # at app:80 over the project's own network; nothing else is published, and it never joins another project's network.
+  cloudflared:
+    profiles: !reset []
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?set CLOUDFLARE_TUNNEL_TOKEN in .env to the token of a new tunnel for this app}
+
+  scheduler:
+    profiles: [off]
+
+  db:
+    mem_limit: 512m
+    memswap_limit: 512m
+    command: ["postgres", "-c", "shared_buffers=128MB"]

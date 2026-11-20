@@ -1,0 +1,128 @@
+# One compose project: `application-test`. Run from this folder (deploy/):
+#   docker compose -f compose.yaml up -d                                (full limits, a box of its own: about 2.9 GB)
+#   docker compose -f compose.yaml -f compose.demo.yaml up -d           (the shared demo box: about 1.5 GB, see compose.demo.yaml)
+# This file never builds: it runs the images `application-test/app:$IMAGE_TAG` and `application-test/media:$IMAGE_TAG`.
+# They are built on a developer's machine with compose.build.yaml (see README-demo.md) and loaded on the box, so no Composer,
+# npm or Vite ever runs there.
+# Secrets only in deploy/.env (untracked; write it from deploy/.env.example).
+#
+# Memory: every service has a hard cap, and memswap_limit equals mem_limit so none of them can swap.
+# Full limits: app 768 + worker-default 384 + worker-media 768 + scheduler 128 + db 768 + cloudflared 64 (profile `tunnel`) = 2,880 MB.
+name: application-test
+
+# Two networks. `internal` has no way out: the database lives only there, so a flaw in the app or the database
+# image cannot reach the internet, the host or the cloud metadata address from it. `egress` is for the services
+# that must call out (Mistral, ElevenLabs, Langfuse, the web pages users add) and for the tunnel.
+# Every service's logs are capped (json-file, 10 MB x 3 files = 30 MB at most each), so logs can never fill the box's disk.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-app: &app
+  logging: *logging
+  env_file: .env
+  restart: unless-stopped
+  networks: [internal, egress]
+  volumes:
+    - storage:/var/www/html/storage
+
+services:
+  app:
+    <<: *app
+    image: application-test/app:${IMAGE_TAG:?set IMAGE_TAG in .env to the tag of the image you loaded}
+    ports:
+      - "127.0.0.1:${APP_PORT:-8090}:80"
+    mem_limit: 768m
+    memswap_limit: 768m
+    cpus: 1.0
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/up"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  worker-default:
+    <<: *app
+    user: www-data # not root: files a worker writes (audio) must be readable and deletable by the web process (php-fpm runs as www-data)
+    image: application-test/app:${IMAGE_TAG:?set IMAGE_TAG}
+    command: ["php", "artisan", "queue:work", "--queue=default", "--tries=2", "--timeout=120"]
+    mem_limit: 384m
+    memswap_limit: 384m
+    cpus: 0.5
+    depends_on:
+      app:
+        condition: service_healthy
+
+  worker-media:
+    <<: *app
+    user: www-data # not root: files a worker writes (audio) must be readable and deletable by the web process (php-fpm runs as www-data)
+    image: application-test/media:${IMAGE_TAG:?set IMAGE_TAG}
+    command: ["php", "artisan", "queue:work", "--queue=media", "--tries=2", "--timeout=600"]
+    mem_limit: 768m
+    memswap_limit: 768m
+    cpus: 1.0
+    depends_on:
+      app:
+        condition: service_healthy
+
+  scheduler:
+    <<: *app
+    user: www-data # not root: files a worker writes (audio) must be readable and deletable by the web process (php-fpm runs as www-data)
+    image: application-test/app:${IMAGE_TAG:?set IMAGE_TAG}
+    command: ["php", "artisan", "schedule:work"]
+    mem_limit: 128m
+    memswap_limit: 128m
+    cpus: 0.1
+    depends_on:
+      app:
+        condition: service_healthy
+
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      # The database is made with the same name, user and password the app connects with (DB_*), unless POSTGRES_* say otherwise.
+      POSTGRES_DB: ${POSTGRES_DB:-${DB_DATABASE:-application_test}}
+      POSTGRES_USER: ${POSTGRES_USER:-${DB_USERNAME:-app}}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-${DB_PASSWORD:?set DB_PASSWORD (or POSTGRES_PASSWORD) in .env}}
+    command: ["postgres", "-c", "shared_buffers=192MB"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [internal]
+    mem_limit: 768m
+    memswap_limit: 768m
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Fence 2 only: the public hostname maps through a Cloudflare tunnel to `app:80`.
+  cloudflared:
+    image: cloudflare/cloudflared:2026.11.0
+    profiles: [tunnel]
+    restart: unless-stopped
+    logging: *logging
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    networks: [egress]
+    mem_limit: 64m
+    memswap_limit: 64m
+    cpus: 0.1
+
+networks:
+  internal:
+    internal: true
+  egress:
+
+volumes:
+  pgdata:
+  storage:

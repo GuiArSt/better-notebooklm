@@ -1,0 +1,15 @@
+# TLS ends at Cloudflare (the tunnel) or the host's proxy; Caddy inside the container speaks plain HTTP.
+{
+	auto_https off
+	admin off
+}
+
+:80 {
+	root * /var/www/html/public
+	encode zstd gzip
+	php_fastcgi 127.0.0.1:9000
+	file_server
+	request_body {
+		max_size 60MB
+	}
+}

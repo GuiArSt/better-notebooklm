@@ -1,0 +1,19 @@
+# Builds the two images for the box. Run on a developer's machine, NOT on the box, through the script, which refuses a dirty tree
+# and builds from a clean `git archive HEAD` copy so the image is exactly the commit it is tagged with:
+#   deploy/build-images.sh
+# The box is x86 (linux/amd64): on an Apple Silicon Mac the build runs under emulation (slow, but it works).
+services:
+  app:
+    platform: linux/amd64
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: app
+
+  # The same app plus ffmpeg: the media worker, and the one worker of the demo profile.
+  worker-media:
+    platform: linux/amd64
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: media

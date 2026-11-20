@@ -1,0 +1,458 @@
+/*
+ * Slide templates (D-034). Each slide is a 16:9 canvas laid out in container-query units (1cqw = 1% of the
+ * slide's width), so the whole slide scales with its container, from a 1280 px viewer to a 375 px phone and to
+ * print, with no JavaScript. Sizes are noted in px at 1280 wide. Colours come from the app's tokens.
+ */
+
+.sl-frame {
+    container-type: inline-size;
+    width: 100%;
+}
+
+.sl {
+    --sl-bg: var(--panel, #fff);
+    --sl-ink: var(--foreground, #171717);
+    --sl-muted: var(--muted-foreground, #636363);
+    --sl-soft: var(--card-soft, #f3f3f3);
+    --sl-line: var(--tile-border, #e5e7eb);
+    --sl-signal: #0ea5e9;
+    --sl-invert-bg: #171717;
+    --sl-invert-ink: #fafafa;
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    overflow: hidden;
+    padding: 5cqw 6.25cqw 3.4cqw; /* 64 80 44 */
+    border-radius: 1.6cqw;
+    background: var(--sl-bg);
+    color: var(--sl-ink);
+    font-family: var(
+        --font-sans,
+        'Figtree',
+        ui-sans-serif,
+        system-ui,
+        sans-serif
+    );
+    font-size: 1.72cqw; /* 22 */
+    line-height: 1.38;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    box-sizing: border-box;
+}
+
+.dark .sl {
+    --sl-signal: #38bdf8;
+    --sl-invert-bg: oklch(0.27 0.004 250);
+    --sl-invert-ink: #fafafa;
+}
+
+.sl *,
+.sl *::before,
+.sl *::after {
+    box-sizing: border-box;
+}
+
+:where(.sl) :where(p, h1, h2, h3, ul, ol, blockquote, figure) {
+    margin: 0;
+    padding: 0;
+}
+
+/* --- shared parts ------------------------------------------------------- */
+
+/* --sl-fit is set on the body by useFitText (D-056): every font size below it, and the gaps that hold text apart, are multiplied by it */
+.sl-body {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    font-size: calc(1.72cqw * var(--sl-fit, 1));
+}
+
+.sl-heading {
+    font-size: calc(3.3cqw * var(--sl-fit, 1)); /* 42 */
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.012em;
+    margin-bottom: calc(2.5cqw * var(--sl-fit, 1));
+    max-width: 88%;
+    text-wrap: balance;
+}
+
+.sl-agent {
+    display: inline-block;
+    flex: none;
+    width: 0.95cqw;
+    height: 0.95cqw;
+    border-radius: 0.2cqw;
+    background: currentColor;
+}
+
+.sl-agent.is-signal {
+    background: var(--sl-signal);
+}
+
+.sl-footer {
+    position: relative;
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 1.5cqw;
+    height: 3.6cqw; /* fixed, so a chip can never squeeze the slide's content */
+    margin-top: 1.6cqw;
+    border-top: 1px solid var(--sl-line);
+    color: var(--sl-muted);
+    font-size: 1.1cqw; /* 14 */
+    line-height: 1.3;
+}
+
+.sl-footer-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; /* a repeat of the deck title, never the slide's own content */
+}
+
+.sl-cites {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.3cqw;
+}
+
+/* the app's citation chip, scaled with the slide (unlayered, so it wins over the chip's Tailwind sizes) */
+.sl-cites [data-testid='citation'] {
+    padding: 0 0.45cqw;
+    border-radius: 0.3cqw;
+    font-size: clamp(8px, 1cqw, 13px);
+    line-height: 1.5;
+}
+
+.sl-page {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+}
+
+.sl-constellation {
+    position: absolute;
+    pointer-events: none;
+}
+
+/* --- title -------------------------------------------------------------- */
+
+.sl--title .sl-body {
+    justify-content: flex-end;
+    padding-bottom: 2cqw;
+}
+
+.sl--title .sl-constellation {
+    top: -1cqw;
+    right: -2cqw;
+    width: 46%;
+    color: var(--sl-ink);
+}
+
+.sl-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.8cqw;
+    margin-bottom: 2.2cqw;
+    color: var(--sl-muted);
+    font-size: calc(1.2cqw * var(--sl-fit, 1));
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sl--title h1 {
+    max-width: 74%;
+    font-size: calc(5cqw * var(--sl-fit, 1)); /* 64 */
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.sl--title .sl-sub {
+    max-width: 66%;
+    margin-top: 2.2cqw;
+    color: var(--sl-muted);
+    font-size: calc(2cqw * var(--sl-fit, 1)); /* 26 */
+    line-height: 1.35;
+    text-wrap: pretty;
+}
+
+/* --- section ------------------------------------------------------------ */
+
+.sl--section {
+    background: var(--sl-invert-bg);
+    color: var(--sl-invert-ink);
+    --sl-line: color-mix(in oklab, var(--sl-invert-ink) 18%, transparent);
+    --sl-muted: color-mix(in oklab, var(--sl-invert-ink) 62%, transparent);
+}
+
+.sl--section .sl-constellation {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    color: var(--sl-invert-ink);
+}
+
+.sl--section .sl-body {
+    justify-content: center;
+}
+
+.sl-kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.9cqw;
+    margin-bottom: 2cqw;
+    color: var(--sl-signal);
+    font-size: calc(1.5cqw * var(--sl-fit, 1));
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.sl--section h2 {
+    max-width: 70%;
+    font-size: calc(4.6cqw * var(--sl-fit, 1)); /* 59 */
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.018em;
+    text-wrap: balance;
+}
+
+/* --- bullets ------------------------------------------------------------ */
+
+.sl-bullets {
+    display: flex;
+    flex-direction: column;
+    gap: calc(1.35cqw * var(--sl-fit, 1));
+    max-width: 86%;
+    list-style: none;
+}
+
+.sl-bullets li {
+    display: flex;
+    align-items: baseline;
+    gap: 1.5cqw;
+}
+
+.sl-bullets .sl-agent {
+    transform: translateY(-0.15cqw);
+    color: var(--sl-muted);
+}
+
+/* --- two columns -------------------------------------------------------- */
+
+.sl-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2cqw;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.sl-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2cqw;
+    padding: calc(2.2cqw * var(--sl-fit, 1)) calc(2.4cqw * var(--sl-fit, 1));
+    border-radius: 1.6cqw;
+    background: var(--sl-soft);
+    font-size: calc(1.56cqw * var(--sl-fit, 1)); /* 20 */
+    line-height: 1.36;
+}
+
+.sl-col h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.8cqw;
+    margin: 0 0 0.4cqw;
+    font-size: calc(1.25cqw * var(--sl-fit, 1));
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sl-muted);
+}
+
+.sl-col ul {
+    display: flex;
+    flex-direction: column;
+    gap: calc(1cqw * var(--sl-fit, 1));
+    list-style: none;
+}
+
+.sl-col li {
+    padding-left: 1.4cqw;
+    border-left: 0.25cqw solid var(--sl-line);
+}
+
+.sl-col.is-right li {
+    border-left-color: var(--sl-signal);
+}
+
+/* --- big number --------------------------------------------------------- */
+
+.sl-big {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 4cqw;
+    align-items: center;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.sl-number {
+    font-size: calc(12cqw * var(--sl-fit, 1));
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.sl-number[data-size='m'] {
+    font-size: calc(8.6cqw * var(--sl-fit, 1));
+}
+
+.sl-number[data-size='s'] {
+    font-size: calc(5.6cqw * var(--sl-fit, 1));
+}
+
+.sl-number[data-size='xs'] {
+    font-size: calc(3.6cqw * var(--sl-fit, 1));
+    line-height: 1.1;
+    white-space: normal; /* beyond the target's 12 characters the figure wraps rather than overflows */
+}
+
+.sl-number-label {
+    display: flex;
+    align-items: center;
+    gap: 0.9cqw;
+    margin-top: 1.6cqw;
+    font-size: calc(1.8cqw * var(--sl-fit, 1));
+    font-weight: 500;
+}
+
+.sl-context {
+    padding-left: 3cqw;
+    border-left: 1px solid var(--sl-line);
+    color: var(--sl-muted);
+    font-size: calc(1.72cqw * var(--sl-fit, 1));
+    line-height: 1.45;
+}
+
+/* --- quote -------------------------------------------------------------- */
+
+.sl--quote .sl-body {
+    justify-content: center;
+    padding: 0 4cqw;
+}
+
+.sl-quote-mark {
+    width: 5cqw;
+    height: auto;
+    margin-bottom: 1.6cqw;
+    color: var(--sl-signal);
+}
+
+.sl--quote blockquote {
+    max-width: 92%;
+    font-size: calc(2.95cqw * var(--sl-fit, 1)); /* 38 */
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    text-wrap: pretty;
+}
+
+.sl-attribution {
+    display: flex;
+    align-items: center;
+    gap: 1cqw;
+    margin-top: 2.6cqw;
+    color: var(--sl-muted);
+    font-size: calc(1.6cqw * var(--sl-fit, 1));
+}
+
+/* --- steps -------------------------------------------------------------- */
+
+.sl-steps {
+    position: relative;
+    display: grid;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+    gap: 2cqw;
+    margin-top: 1cqw;
+    list-style: none;
+}
+
+.sl-steps::before {
+    /* the hairline that joins the steps, like the constellation's links */
+    content: '';
+    position: absolute;
+    top: 1.6cqw;
+    left: 1.6cqw;
+    right: 1.6cqw;
+    border-top: 1px solid var(--sl-line);
+}
+
+.sl-step-n {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 3.2cqw;
+    height: 3.2cqw;
+    margin-bottom: 1.6cqw;
+    border-radius: 0.7cqw;
+    background: var(--sl-ink);
+    color: var(--sl-bg);
+    font-size: calc(1.4cqw * var(--sl-fit, 1));
+    font-weight: 600;
+}
+
+.sl-steps li:last-child .sl-step-n {
+    background: var(--sl-signal);
+    color: #fff;
+}
+
+.sl-step-label {
+    margin-bottom: 0.7cqw;
+    font-size: calc(1.6cqw * var(--sl-fit, 1));
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.sl-step-text {
+    color: var(--sl-muted);
+    font-size: calc(1.38cqw * var(--sl-fit, 1)); /* 18 */
+    line-height: 1.4;
+}
+
+.sl-steps[data-count='3'] .sl-step-label {
+    font-size: calc(1.9cqw * var(--sl-fit, 1));
+}
+
+.sl-steps[data-count='3'] .sl-step-text {
+    font-size: calc(1.65cqw * var(--sl-fit, 1));
+}
+
+/* --- print: one slide per page ------------------------------------------ */
+
+@media print {
+    .sl-frame {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .sl {
+        border-radius: 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

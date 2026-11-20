@@ -1,0 +1,26 @@
+# Only src/ and deploy/ go into the build context.
+*
+!src
+!deploy
+src/vendor
+src/node_modules
+src/public/build
+src/public/hot
+src/storage/logs
+src/storage/framework
+src/storage/pail
+src/bootstrap/cache/*.php
+src/.env
+src/.phpunit.cache
+deploy/.env
+# Dev data and secrets never go into the image: uploads, local databases, tests, caches and every .env (but the template).
+src/storage/app
+src/database/*.sqlite
+src/database/*.sqlite-journal
+src/tests
+src/.phpunit.cache
+src/.phpunit.result.cache
+src/.env.*
+!src/.env.example
+src/.git
+**/.DS_Store

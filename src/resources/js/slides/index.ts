@@ -1,0 +1,16 @@
+export { SlideView } from '@/slides/slide';
+export { SlideFrame } from '@/slides/slide-frame';
+export { fitScale } from '@/slides/fit/fit-scale';
+export { useFitText } from '@/slides/fit/use-fit-text';
+export type { SlideContext } from '@/slides/slide-frame';
+export { BigNumberSlide } from '@/slides/templates/big-number-slide';
+export { BulletsSlide } from '@/slides/templates/bullets-slide';
+export { QuoteSlide } from '@/slides/templates/quote-slide';
+export { SectionSlide } from '@/slides/templates/section-slide';
+export { StepsSlide } from '@/slides/templates/steps-slide';
+export { TitleSlide } from '@/slides/templates/title-slide';
+export { TwoColumnsSlide } from '@/slides/templates/two-columns-slide';
+export { checkDeck, hardMax, LIMITS, TARGETS, TEMPLATES } from '@/slides/types';
+export type * from '@/slides/types';
+export { PptxButton } from '@/slides/pptx/pptx-button';
+export { downloadPptx } from '@/slides/pptx/download-pptx';

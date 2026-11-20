@@ -1,0 +1,202 @@
+/*
+ * The mind map (D-044). Colours come from the app's tokens; the links and toggles wear the mind map's own tint
+ * (indigo, as its Studio tile). Unlayered on purpose, so it wins over React Flow's base styles.
+ */
+
+.mm {
+    --mm-tint: #4f46e5; /* indigo-600 */
+    --mm-tint-soft: #e0e7ff; /* indigo-100 */
+    --mm-pill: var(--card-soft, #f3f1f1);
+    --mm-ink: var(--foreground, #171717);
+    --mm-muted: var(--muted-foreground, #636363);
+    --mm-bg: var(--panel, #fff);
+    --mm-line: var(--tile-border, #e5e7eb);
+
+    position: relative;
+    width: 100%;
+    height: min(70vh, 640px);
+    min-height: 360px;
+    overflow: hidden;
+    border-radius: 1rem;
+    background: var(--mm-bg);
+    color: var(--mm-ink);
+    font-family: var(
+        --font-sans,
+        'Figtree',
+        ui-sans-serif,
+        system-ui,
+        sans-serif
+    );
+}
+
+.dark .mm {
+    --mm-tint: #818cf8; /* indigo-400 */
+    --mm-tint-soft: color-mix(in oklab, #6366f1 22%, transparent);
+}
+
+.mm .react-flow__node-mind {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: default;
+}
+
+.mm .react-flow__handle {
+    width: 1px;
+    height: 1px;
+    min-width: 0;
+    min-height: 0;
+    border: 0;
+    background: transparent;
+    opacity: 0;
+}
+
+/* the curved links */
+.mm .react-flow__edge-path,
+.mm .mm-link path {
+    stroke: var(--mm-tint);
+    stroke-width: 1.75;
+    stroke-opacity: 0.75;
+}
+
+/* the pills */
+.mm-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 10px 10px 16px;
+    border-radius: 14px;
+    background: var(--mm-pill);
+    font-size: 14px;
+    line-height: 20px;
+    box-sizing: border-box;
+}
+
+.mm-pill.is-root {
+    background: var(--mm-tint-soft);
+    font-weight: 600;
+}
+
+.mm-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+
+.mm-label:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--mm-tint);
+    text-underline-offset: 3px;
+}
+
+.mm-chips {
+    display: inline-flex;
+    flex: none;
+    gap: 2px;
+}
+
+/* the round › on a branch: points right when closed, turns left when open */
+.mm-toggle {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin-right: -22px; /* sits on the pill's right edge, where the links leave */
+    padding: 0;
+    border: 1.5px solid var(--mm-tint);
+    border-radius: 999px;
+    background: var(--mm-bg);
+    color: var(--mm-tint);
+    cursor: pointer;
+}
+
+.mm-toggle svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 150ms ease;
+}
+
+.mm-toggle.is-open svg {
+    transform: rotate(180deg);
+}
+
+.mm-toggle:focus-visible,
+.mm-label:focus-visible,
+.mm-controls button:focus-visible {
+    outline: 2px solid var(--mm-tint);
+    outline-offset: 2px;
+}
+
+/* the vertical control stack */
+.mm-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px;
+    border: 1px solid var(--mm-line);
+    border-radius: 999px;
+    background: var(--mm-bg);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.06);
+}
+
+.mm-controls button {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--mm-ink);
+    cursor: pointer;
+}
+
+.mm-controls button:hover {
+    background: var(--mm-pill);
+}
+
+.mm-controls svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.mm-error span {
+    display: block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--destructive, #dc2626);
+    color: #fff;
+    font-size: 13px;
+}
+
+/* React Flow's attribution, quiet */
+.mm .react-flow__attribution {
+    background: transparent;
+    font-size: 10px;
+    opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mm-toggle svg {
+        transition: none;
+    }
+}

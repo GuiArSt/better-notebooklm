@@ -1,0 +1,22 @@
+# Development: only the database runs in Docker. PHP, the queue and Vite run on the Mac.
+# Host port 5433 (not 5432) so it does not clash with a Postgres already on the Mac.
+name: application-test-dev
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: application_test
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./dev-init.sql:/docker-entrypoint-initdb.d/dev-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d application_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  pgdata:
